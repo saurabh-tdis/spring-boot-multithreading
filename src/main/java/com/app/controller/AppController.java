@@ -2,16 +2,13 @@ package com.app.controller;
 
 
 import com.app.service.AppService;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @RestController
 public class AppController {
@@ -70,6 +67,38 @@ public class AppController {
 
         return  all;
 //        return  Thread.activeCount()+"";
+
+    }
+
+    @GetMapping("/sleep-async")
+    public String sleepAsync() throws InterruptedException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        appService.sleepAsync();
+
+        stopWatch.stop();
+        return "success "+stopWatch.getTotalTimeMillis()/1000;
+    }
+
+    @GetMapping("/sleep-async-future")
+    public String sleepAsyncFuture() throws InterruptedException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        appService.sleepAsyncWithFutures();
+
+        stopWatch.stop();
+        return "success "+stopWatch.getTotalTimeMillis()/1000;
+    }
+
+    // imp as we mae need to use result , understand properly
+    @GetMapping("/sleep-async-future-returning")
+    public CompletableFuture<Long> sleepAsyncFutureReturning() throws InterruptedException, ExecutionException {
+
+        CompletableFuture<Long> value = appService.sleepAsyncWithFuturesReturning();
+
+        value.thenAccept(s-> System.out.println("total result in controller ="+s)); // will execute when task in background will get complete
+
+        return CompletableFuture.completedFuture(0L);
 
     }
 
