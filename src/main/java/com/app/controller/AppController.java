@@ -102,4 +102,11 @@ public class AppController {
 
     }
 
+    @GetMapping("/run-async")
+    public String runAsync(){
+        appService.callRunAsync();
+        return "success";
+    }
+
+
 }

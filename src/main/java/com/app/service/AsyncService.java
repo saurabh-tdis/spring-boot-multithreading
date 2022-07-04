@@ -1,6 +1,7 @@
 package com.app.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,4 +87,18 @@ public class AsyncService {
         return value;
 
     }
+
+
+    @Async
+    public void runAsync(TaskExecutor executor,Runnable runnable){
+        log.info("thread in async service class async method "+Thread.currentThread().getName());
+        executor.execute(runnable);
+    }
+
+    @Async
+    public void runAsync(Runnable runnable){
+        log.info("thread in async service class async method "+Thread.currentThread().getName());
+        runnable.run();
+    }
+
 }

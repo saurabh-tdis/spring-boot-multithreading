@@ -3,6 +3,7 @@ package com.app.service;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -99,6 +100,88 @@ public class AppService {
     public CompletableFuture<Long> sleepAsyncWithFuturesReturning() throws InterruptedException {
 //        sleep(); // wont work from here
         return asyncService.sleepWithFuturesReturning(); // now it will get call as async
+    }
+
+
+    // another way to call async method without calling from another class and declaring there
+    // here we are just call method which is async and passing argument as runnable and
+    // from service class we can call than method that will run in async
+    public void callRunAsync(){
+        log.info("going to start call async method");
+        log.info("thread in service class "+Thread.currentThread().getName());
+
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        System.out.println("Available processors ============ ======== " + availableProcessors);
+        availableProcessors = Math.min(availableProcessors, 3);
+        taskExecutor.setCorePoolSize(availableProcessors);
+        taskExecutor.setMaxPoolSize(4);
+        taskExecutor.setQueueCapacity(5);
+        taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+        taskExecutor.setAwaitTerminationSeconds(60);
+        taskExecutor.initialize();
+        taskExecutor.setThreadNamePrefix("Finscan All Screening -");
+
+        log.info("with task executor === ");
+//        asyncService.runAsync(taskExecutor,()->asyncRunMethod()); // with task executor
+//
+//        log.info("without task executor === ");
+//        asyncService.runAsync(()->asyncRunMethod()); // without task executor
+
+        log.info("with own task executor === ");
+        asyncService.runAsync(()->asyncRunMethodWithOwnTaskExecutor()); // with own task executor
+
+        log.info("thread in service class "+Thread.currentThread().getName());
+
+        log.info("called async method");
+
+    }
+
+
+    public void asyncRunMethod(){
+        log.info("should run in async , run start");
+
+        log.info("thread in service class async method "+Thread.currentThread().getName());
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("async run ends");
+    }
+
+    public void asyncRunMethodWithOwnTaskExecutor(){
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        System.out.println("Available processors ============ ======== " + availableProcessors);
+        availableProcessors = Math.min(availableProcessors, 3);
+        taskExecutor.setCorePoolSize(availableProcessors);
+        taskExecutor.setMaxPoolSize(4);
+        taskExecutor.setQueueCapacity(5);
+        taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+        taskExecutor.setAwaitTerminationSeconds(60);
+        taskExecutor.initialize();
+        taskExecutor.setThreadNamePrefix("Own Task Executor -");
+
+        log.info("should run in async , run start");
+
+        log.info("thread in service class async method with own task executor"+Thread.currentThread().getName());
+
+        log.info("loop start");
+        for (int i = 0; i < 5; i++) {
+            taskExecutor.execute(()-> System.out.println(Thread.currentThread().getName()));
+        }
+        log.info("loop ends");
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("async run ends with own task executor ");
     }
 
 }
